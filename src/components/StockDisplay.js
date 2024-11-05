@@ -20,13 +20,17 @@ function StockDisplay() {
     setError(null);
     try {
       const response = await axios.get(`https://stock-api-nontawit-nawattanonapp.vercel.app/api/${plan}/${position}`);
-      setData(Object.entries(response.data).map(([key, value]) => ({ productID: key, ...value })));
+      const sortedData = Object.entries(response.data)
+        .map(([key, value]) => ({ productID: key, ...value }))
+        .sort((a, b) => a.codeNo.localeCompare(b.codeNo)); // เรียงข้อมูลตาม codeNo
+      setData(sortedData);
     } catch (err) {
       setError('Error fetching data');
       console.error(err);
     }
     setLoading(false);
   };
+  
 
   const handleSingleSubmit = async () => {
     try {
