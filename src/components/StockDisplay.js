@@ -13,7 +13,7 @@ function StockDisplay() {
   const [showSingleModal, setShowSingleModal] = useState(false);
   const [showMultipleModal, setShowMultipleModal] = useState(false);
   const [singleProduct, setSingleProduct] = useState({ position: '', productID: '', codeNo: '', productName: '', price: '', quantity: '' });
-  const [multipleProducts, setMultipleProducts] = useState('');
+  const [multipleProducts, setMultipleProducts] = useState([{ position: '', productID: '', codeNo: '', productName: '', price: '', quantity: '' }]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -42,8 +42,7 @@ function StockDisplay() {
 
   const handleMultipleSubmit = async () => {
     try {
-      const productsArray = JSON.parse(multipleProducts);
-      await axios.post('https://stock-api-nontawit-nawattanonapp.vercel.app/api/products', productsArray);
+      await axios.post('https://stock-api-nontawit-nawattanonapp.vercel.app/api/products', multipleProducts);
       alert('Products added successfully.');
       fetchData();
       setShowMultipleModal(false);
@@ -51,6 +50,21 @@ function StockDisplay() {
       console.error('Error adding products:', error);
       alert('Failed to add products.');
     }
+  };
+
+  const handleMultipleChange = (index, field, value) => {
+    const updatedProducts = multipleProducts.map((product, i) => 
+      i === index ? { ...product, [field]: value } : product
+    );
+    setMultipleProducts(updatedProducts);
+  };
+
+  const addProductRow = () => {
+    setMultipleProducts([...multipleProducts, { position: '', productID: '', codeNo: '', productName: '', price: '', quantity: '' }]);
+  };
+
+  const removeProductRow = (index) => {
+    setMultipleProducts(multipleProducts.filter((_, i) => i !== index));
   };
 
   return (
@@ -119,48 +133,35 @@ function StockDisplay() {
         </Col>
       </Row>
 
-      {/* Modal for Single Product */}
-      <Modal show={showSingleModal} onHide={() => setShowSingleModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Add a Single Product</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            {['position', 'productID', 'codeNo', 'productName', 'price', 'quantity'].map((field) => (
-              <Form.Group className="mb-3" controlId={field} key={field}>
-                <Form.Label>{field.charAt(0).toUpperCase() + field.slice(1)}</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder={`Enter ${field}`}
-                  value={singleProduct[field]}
-                  onChange={(e) => setSingleProduct({ ...singleProduct, [field]: e.target.value })}
-                />
-              </Form.Group>
-            ))}
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowSingleModal(false)}>Close</Button>
-          <Button variant="primary" onClick={handleSingleSubmit}>Add Product</Button>
-        </Modal.Footer>
-      </Modal>
-
       {/* Modal for Multiple Products */}
       <Modal show={showMultipleModal} onHide={() => setShowMultipleModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Add Multiple Products</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form.Group controlId="multipleProducts">
-            <Form.Label>Enter Products JSON Array</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={5}
-              placeholder='e.g., [{"position": "01", "productID": "500041", "codeNo": "002", "productName": "pd03", "price": 60, "quantity": 5}, ...]'
-              value={multipleProducts}
-              onChange={(e) => setMultipleProducts(e.target.value)}
-            />
-          </Form.Group>
+          {multipleProducts.map((product, index) => (
+            <div key={index} className="border p-3 mb-3">
+              <Row className="g-3">
+                {['position', 'productID', 'codeNo', 'productName', 'price', 'quantity'].map((field) => (
+                  <Col sm={6} key={field}>
+                    <Form.Group controlId={`${field}-${index}`}>
+                      <Form.Label>{field.charAt(0).toUpperCase() + field.slice(1)}</Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder={`Enter ${field}`}
+                        value={product[field]}
+                        onChange={(e) => handleMultipleChange(index, field, e.target.value)}
+                      />
+                    </Form.Group>
+                  </Col>
+                ))}
+              </Row>
+              <Button variant="danger" className="mt-3" onClick={() => removeProductRow(index)}>
+                Remove
+              </Button>
+            </div>
+          ))}
+          <Button variant="secondary" onClick={addProductRow}>Add Another Product</Button>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowMultipleModal(false)}>Close</Button>
