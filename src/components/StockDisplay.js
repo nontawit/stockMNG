@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Form, Col, Row, Table, Container } from 'react-bootstrap';
 
 function StockDisplay() {
   const [plan, setPlan] = useState('Stock615');
@@ -42,7 +42,7 @@ function StockDisplay() {
 
   const handleMultipleSubmit = async () => {
     try {
-      const productsArray = JSON.parse(multipleProducts); // Expects JSON array input for multiple products
+      const productsArray = JSON.parse(multipleProducts);
       await axios.post('https://stock-api-nontawit-nawattanonapp.vercel.app/api/products', productsArray);
       alert('Products added successfully.');
       fetchData();
@@ -54,36 +54,42 @@ function StockDisplay() {
   };
 
   return (
-    <div className="container mt-5">
-      <h2 className="mb-4">Stock Management</h2>
-      <div className="mb-4">
-        <label>รหัสแพลน</label>
-        <select className="form-select" value={plan} onChange={(e) => setPlan(e.target.value)}>
-          <option value="Stock615">Stock615</option>
-          <option value="Stock616">Stock616</option>
-        </select>
-      </div>
-      <div className="mb-4">
-        <label>ชั้น</label>
-        <select className="form-select" value={position} onChange={(e) => setPosition(e.target.value)}>
-          <option value="01">01</option>
-          <option value="02">02</option>
-        </select>
-      </div>
-      <button className="btn btn-primary mb-4" onClick={fetchData}>ดูข้อมูล</button>
+    <Container className="mt-5">
+      <h2 className="mb-4 text-center">Stock Management</h2>
+      <Row className="mb-3">
+        <Col md={6} sm={12}>
+          <Form.Group>
+            <Form.Label>Plan Code</Form.Label>
+            <Form.Select value={plan} onChange={(e) => setPlan(e.target.value)}>
+              <option value="Stock615">Stock615</option>
+              <option value="Stock616">Stock616</option>
+            </Form.Select>
+          </Form.Group>
+        </Col>
+        <Col md={6} sm={12}>
+          <Form.Group>
+            <Form.Label>Position</Form.Label>
+            <Form.Select value={position} onChange={(e) => setPosition(e.target.value)}>
+              <option value="01">01</option>
+              <option value="02">02</option>
+            </Form.Select>
+          </Form.Group>
+        </Col>
+      </Row>
+      <Button variant="primary" className="w-100 mb-4" onClick={fetchData}>View Data</Button>
 
       {loading && <p>Loading...</p>}
       {error && <p className="text-danger">{error}</p>}
 
       {data.length > 0 && (
-        <table className="table table-bordered">
+        <Table responsive striped bordered hover className="text-center">
           <thead>
             <tr>
-              <th>รหัสสินค้า</th>
-              <th>ชื่อสินค้า</th>
-              <th>จำนวน</th>
-              <th>ราคา(บาท)</th>
-              <th>บันทึก</th>
+              <th>Product ID</th>
+              <th>Product Name</th>
+              <th>Quantity</th>
+              <th>Price (Baht)</th>
+              <th>Recorded</th>
             </tr>
           </thead>
           <tbody>
@@ -97,11 +103,21 @@ function StockDisplay() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </Table>
       )}
 
-      <button className="btn btn-success me-2" onClick={() => setShowSingleModal(true)}>เพิ่มข้อมูล</button>
-      <button className="btn btn-success" onClick={() => setShowMultipleModal(true)}>เพิ่มชุดข้อมูล</button>
+      <Row className="mt-4">
+        <Col>
+          <Button variant="success" className="w-100" onClick={() => setShowSingleModal(true)}>
+            Add Single Product
+          </Button>
+        </Col>
+        <Col>
+          <Button variant="success" className="w-100" onClick={() => setShowMultipleModal(true)}>
+            Add Multiple Products
+          </Button>
+        </Col>
+      </Row>
 
       {/* Modal for Single Product */}
       <Modal show={showSingleModal} onHide={() => setShowSingleModal(false)}>
@@ -109,19 +125,19 @@ function StockDisplay() {
           <Modal.Title>Add a Single Product</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <div className="row g-3">
+          <Form>
             {['position', 'productID', 'codeNo', 'productName', 'price', 'quantity'].map((field) => (
-              <div key={field} className="col-12">
-                <input
+              <Form.Group className="mb-3" controlId={field} key={field}>
+                <Form.Label>{field.charAt(0).toUpperCase() + field.slice(1)}</Form.Label>
+                <Form.Control
                   type="text"
-                  className="form-control"
-                  placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                  placeholder={`Enter ${field}`}
                   value={singleProduct[field]}
                   onChange={(e) => setSingleProduct({ ...singleProduct, [field]: e.target.value })}
                 />
-              </div>
+              </Form.Group>
             ))}
-          </div>
+          </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowSingleModal(false)}>Close</Button>
@@ -135,20 +151,23 @@ function StockDisplay() {
           <Modal.Title>Add Multiple Products</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <textarea
-            className="form-control mb-3"
-            rows="5"
-            placeholder='Enter products as JSON array, e.g., [{"position": "01", "productID": "500041", "codeNo": "002", "productName": "pd03", "price": 60, "quantity": 5}, ...]'
-            value={multipleProducts}
-            onChange={(e) => setMultipleProducts(e.target.value)}
-          />
+          <Form.Group controlId="multipleProducts">
+            <Form.Label>Enter Products JSON Array</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={5}
+              placeholder='e.g., [{"position": "01", "productID": "500041", "codeNo": "002", "productName": "pd03", "price": 60, "quantity": 5}, ...]'
+              value={multipleProducts}
+              onChange={(e) => setMultipleProducts(e.target.value)}
+            />
+          </Form.Group>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowMultipleModal(false)}>Close</Button>
           <Button variant="primary" onClick={handleMultipleSubmit}>Add Products</Button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </Container>
   );
 }
 
