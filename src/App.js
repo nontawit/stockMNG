@@ -1,11 +1,11 @@
 import React from 'react';
 import './App.css';
-import StockTable from './components/StockTable';
+import StockDisplay from './components/StockDisplay';
 
 const App = () => {
   return (
     <div className="App">
-      <StockTable />
+      <StockDisplay />
     </div>
   );
 };
