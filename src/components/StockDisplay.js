@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../App.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './App.css';
 
 function StockDisplay() {
   const [position, setPosition] = useState('');
@@ -13,7 +14,6 @@ function StockDisplay() {
   const [isEditing, setIsEditing] = useState(false);
   const [editProductID, setEditProductID] = useState('');
 
-  // ฟังก์ชันดึงข้อมูลสินค้าตามตำแหน่ง
   const fetchProducts = async (position) => {
     try {
       const response = await axios.get(`https://stock-api-nontawit-nawattanonapp.vercel.app/api/stock615/${position}`);
@@ -23,7 +23,6 @@ function StockDisplay() {
     }
   };
 
-  // ฟังก์ชันเพิ่มสินค้าหนึ่งรายการ
   const addProduct = async () => {
     try {
       const response = await axios.post('https://stock-api-nontawit-nawattanonapp.vercel.app/api/product', {
@@ -35,25 +34,23 @@ function StockDisplay() {
         quantity
       });
       alert(response.data);
-      fetchProducts(position); // รีเฟรชข้อมูลหลังจากเพิ่มสินค้า
-      clearForm(); // เคลียร์ฟอร์ม
+      fetchProducts(position);
+      clearForm();
     } catch (error) {
       console.error('Error adding product:', error);
     }
   };
 
-  // ฟังก์ชันเพิ่มสินค้าหลายรายการ
   const addMultipleProducts = async (productsList) => {
     try {
       const response = await axios.post('https://stock-api-nontawit-nawattanonapp.vercel.app/api/products', productsList);
       alert(response.data);
-      fetchProducts(position); // รีเฟรชข้อมูลหลังจากเพิ่มสินค้า
+      fetchProducts(position);
     } catch (error) {
       console.error('Error adding multiple products:', error);
     }
   };
 
-  // ฟังก์ชันแก้ไขข้อมูลสินค้า
   const editProduct = async () => {
     try {
       const response = await axios.put(`https://stock-api-nontawit-nawattanonapp.vercel.app/api/product/${position}/${editProductID}`, {
@@ -63,26 +60,24 @@ function StockDisplay() {
         quantity
       });
       alert(response.data);
-      fetchProducts(position); // รีเฟรชข้อมูลหลังจากแก้ไขสินค้า
-      setIsEditing(false); // ปิดโหมดแก้ไข
-      clearForm(); // เคลียร์ฟอร์ม
+      fetchProducts(position);
+      setIsEditing(false);
+      clearForm();
     } catch (error) {
       console.error('Error editing product:', error);
     }
   };
 
-  // ฟังก์ชันลบสินค้า
   const deleteProduct = async (productID) => {
     try {
       const response = await axios.delete(`https://stock-api-nontawit-nawattanonapp.vercel.app/api/product/${position}/${productID}`);
       alert(response.data);
-      fetchProducts(position); // รีเฟรชข้อมูลหลังจากลบสินค้า
+      fetchProducts(position);
     } catch (error) {
       console.error('Error deleting product:', error);
     }
   };
 
-  // ฟังก์ชันเคลียร์ฟอร์ม
   const clearForm = () => {
     setProductID('');
     setCodeNo('');
@@ -93,50 +88,57 @@ function StockDisplay() {
 
   useEffect(() => {
     if (position) {
-      fetchProducts(position); // ดึงข้อมูลเมื่อ position ถูกตั้งค่า
+      fetchProducts(position);
     }
   }, [position]);
 
   return (
-    <div className="App">
-      <h1>Stock Management System</h1>
+    <div className="container my-5">
+      <h1 className="text-center mb-4">Stock Management System</h1>
 
-      {/* เลือกตำแหน่ง (position) */}
-      <div>
-        <label htmlFor="position">Position: </label>
-        <select id="position" value={position} onChange={(e) => setPosition(e.target.value)}>
+      <div className="form-group mb-4">
+        <label htmlFor="position">Position</label>
+        <select className="form-control" id="position" value={position} onChange={(e) => setPosition(e.target.value)}>
           <option value="">Select Position</option>
           <option value="01">01</option>
           <option value="02">02</option>
           <option value="03">03</option>
-          {/* เพิ่มตำแหน่งตามต้องการ */}
         </select>
       </div>
 
-      {/* ฟอร์มสำหรับเพิ่ม/แก้ไขสินค้า */}
-      <div>
+      <div className="card p-4 mb-5">
         <h2>{isEditing ? 'Edit Product' : 'Add Product'}</h2>
-        <label>Product ID:</label>
-        <input type="text" value={productID} onChange={(e) => setProductID(e.target.value)} disabled={isEditing} />
-        <label>Code No:</label>
-        <input type="text" value={codeNo} onChange={(e) => setCodeNo(e.target.value)} />
-        <label>Product Name:</label>
-        <input type="text" value={productName} onChange={(e) => setProductName(e.target.value)} />
-        <label>Price:</label>
-        <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
-        <label>Quantity:</label>
-        <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-
-        <button onClick={isEditing ? editProduct : addProduct}>
-          {isEditing ? 'Save Changes' : 'Add Product'}
-        </button>
+        <form>
+          <div className="form-group">
+            <label>Product ID</label>
+            <input type="text" className="form-control" value={productID} onChange={(e) => setProductID(e.target.value)} disabled={isEditing} />
+          </div>
+          <div className="form-group">
+            <label>Code No</label>
+            <input type="text" className="form-control" value={codeNo} onChange={(e) => setCodeNo(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>Product Name</label>
+            <input type="text" className="form-control" value={productName} onChange={(e) => setProductName(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>Price</label>
+            <input type="number" className="form-control" value={price} onChange={(e) => setPrice(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>Quantity</label>
+            <input type="number" className="form-control" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+          </div>
+          <button type="button" className="btn btn-primary mt-3" onClick={isEditing ? editProduct : addProduct}>
+            {isEditing ? 'Save Changes' : 'Add Product'}
+          </button>
+        </form>
       </div>
 
-      {/* แสดงข้อมูลสินค้าจาก API */}
-      <div>
+      <div className="table-responsive">
         <h2>Product List</h2>
-        <table>
-          <thead>
+        <table className="table table-striped table-bordered">
+          <thead className="thead-dark">
             <tr>
               <th>Product ID</th>
               <th>Code No</th>
@@ -155,8 +157,8 @@ function StockDisplay() {
                 <td>{product.price}</td>
                 <td>{product.quantity}</td>
                 <td>
-                  <button onClick={() => { setIsEditing(true); setEditProductID(product.id); setCodeNo(product.codeNo); setProductName(product.productName); setPrice(product.price); setQuantity(product.quantity); }}>Edit</button>
-                  <button onClick={() => deleteProduct(product.id)}>Delete</button>
+                  <button className="btn btn-warning btn-sm mr-2" onClick={() => { setIsEditing(true); setEditProductID(product.id); setCodeNo(product.codeNo); setProductName(product.productName); setPrice(product.price); setQuantity(product.quantity); }}>Edit</button>
+                  <button className="btn btn-danger btn-sm" onClick={() => deleteProduct(product.id)}>Delete</button>
                 </td>
               </tr>
             ))}
@@ -164,11 +166,9 @@ function StockDisplay() {
         </table>
       </div>
 
-      {/* ปุ่มสำหรับเพิ่มสินค้าหลายรายการ */}
-      <button onClick={() => addMultipleProducts([
+      <button className="btn btn-secondary mt-3" onClick={() => addMultipleProducts([
         { position: '01', productID: 'prod1', codeNo: '001', productName: 'Product 1', price: 100, quantity: 10 },
         { position: '01', productID: 'prod2', codeNo: '002', productName: 'Product 2', price: 150, quantity: 20 },
-        // เพิ่มรายการตามต้องการ
       ])}>
         Add Multiple Products
       </button>
