@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Modal, Button, Form, Card, Row, Col, Table, Spinner } from 'react-bootstrap';
+import { Modal, Button, Form, Card, Row, Col, Table, Spinner, Container } from 'react-bootstrap';
 
 function StockDisplay() {
   const [plan, setPlan] = useState('Stock615');
@@ -67,7 +67,7 @@ function StockDisplay() {
   };
 
   return (
-    <div className="container mt-5">
+    <Container className="mt-5">
       <h2 className="text-center mb-4">Stock Management</h2>
       
       <Card className="mb-4 p-4 shadow-sm">
@@ -118,10 +118,14 @@ function StockDisplay() {
         </Table>
       )}
 
-      <div className="d-flex justify-content-between mt-4">
-        <Button className="btn btn-success" onClick={() => setShowSingleModal(true)}>เพิ่มข้อมูล</Button>
-        <Button className="btn btn-info" onClick={() => setShowMultipleModal(true)}>เพิ่มชุดข้อมูล</Button>
-      </div>
+      <Row className="mt-4 justify-content-center">
+        <Col xs={12} sm={6} className="mb-2 d-flex justify-content-center">
+          <Button className="w-100" variant="success" onClick={() => setShowSingleModal(true)}>เพิ่มข้อมูล</Button>
+        </Col>
+        <Col xs={12} sm={6} className="mb-2 d-flex justify-content-center">
+          <Button className="w-100" variant="info" onClick={() => setShowMultipleModal(true)}>เพิ่มชุดข้อมูล</Button>
+        </Col>
+      </Row>
 
       {/* Modal for Single Product */}
       <Modal show={showSingleModal} onHide={() => setShowSingleModal(false)}>
@@ -175,7 +179,7 @@ function StockDisplay() {
           <Button variant="primary" onClick={handleMultipleSubmit}>Add Products</Button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </Container>
   );
 }
 
