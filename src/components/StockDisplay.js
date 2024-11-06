@@ -7,8 +7,7 @@ const StockDisplay = () => {
   const [selectedPosition, setSelectedPosition] = useState("01");
   const [showEditModal, setShowEditModal] = useState(false);
   const [editProduct, setEditProduct] = useState({
-    position: "",
-    productID: "",
+    id: "",
     codeNo: "",
     productName: "",
     price: 0,
@@ -31,24 +30,17 @@ const StockDisplay = () => {
 
   // ฟังก์ชันเปิด Modal เพื่อแก้ไขสินค้า
   const handleEditClick = (product) => {
-    setEditProduct({
-      position: selectedPosition,
-      productID: product.id,
-      codeNo: product.codeNo,
-      productName: product.productName,
-      price: product.price,
-      quantity: product.quantity,
-    });
+    setEditProduct(product);
     setShowEditModal(true);
   };
 
-  // ฟังก์ชันสำหรับจัดการเมื่อผู้ใช้คลิกปุ่มบันทึกการแก้ไข
+  // ฟังก์ชันจัดการเมื่อผู้ใช้กดปุ่มบันทึกการแก้ไข
   const handleEditSubmit = async () => {
     try {
-      const { position, productID, codeNo, productName, price, quantity } = editProduct;
+      const { id, codeNo, productName, price, quantity } = editProduct;
 
-      // ส่งข้อมูลไปที่ API เพื่ออัปเดตสินค้า
-      await axios.put(`https://stock-api-nontawit-nawattanonapp.vercel.app/api/product/${position}/${productID}`, {
+      // อัปเดตข้อมูลสินค้าผ่าน API
+      await axios.put(`https://stock-api-nontawit-nawattanonapp.vercel.app/api/${selectedPosition}/${id}`, {
         codeNo,
         productName,
         price,
@@ -56,8 +48,8 @@ const StockDisplay = () => {
       });
 
       alert("Product updated successfully.");
-      fetchData(); // โหลดข้อมูลใหม่หลังจากอัปเดต
-      setShowEditModal(false); // ปิด Modal
+      setShowEditModal(false);
+      fetchData(); // โหลดข้อมูลใหม่หลังจากอัปเดตเสร็จสิ้น
     } catch (error) {
       console.error("Error updating product:", error);
       alert("Failed to update product.");
@@ -71,7 +63,7 @@ const StockDisplay = () => {
         <option value="01">Position 01</option>
         <option value="02">Position 02</option>
         <option value="03">Position 03</option>
-        {/* Add more positions as needed */}
+        {/* เพิ่มตำแหน่งอื่นๆ ตามต้องการ */}
       </Form.Select>
 
       <Table striped bordered hover className="mt-3">
@@ -108,17 +100,42 @@ const StockDisplay = () => {
         </Modal.Header>
         <Modal.Body>
           <Form>
-            {["codeNo", "productName", "price", "quantity"].map((field) => (
-              <Form.Group key={field} className="mb-3">
-                <Form.Label>{field === "price" ? "ราคา (บาท)" : field.charAt(0).toUpperCase() + field.slice(1)}</Form.Label>
-                <Form.Control
-                  type={field === "price" || field === "quantity" ? "number" : "text"}
-                  placeholder={`Enter ${field === "price" ? "ราคา" : field}`}
-                  value={editProduct[field]}
-                  onChange={(e) => setEditProduct({ ...editProduct, [field]: e.target.value })}
-                />
-              </Form.Group>
-            ))}
+            <Form.Group className="mb-3">
+              <Form.Label>Code No</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter code number"
+                value={editProduct.codeNo}
+                onChange={(e) => setEditProduct({ ...editProduct, codeNo: e.target.value })}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Product Name</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter product name"
+                value={editProduct.productName}
+                onChange={(e) => setEditProduct({ ...editProduct, productName: e.target.value })}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Price</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Enter price"
+                value={editProduct.price}
+                onChange={(e) => setEditProduct({ ...editProduct, price: parseFloat(e.target.value) })}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Quantity</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Enter quantity"
+                value={editProduct.quantity}
+                onChange={(e) => setEditProduct({ ...editProduct, quantity: parseInt(e.target.value) })}
+              />
+            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
