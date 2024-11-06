@@ -12,6 +12,7 @@ function StockDisplay() {
   const [singleProduct, setSingleProduct] = useState({ productID: '', codeNo: '', productName: '', price: '', quantity: '' });
   const [multiProducts, setMultiProducts] = useState([{ productID: '', codeNo: '', productName: '', price: '', quantity: '' }]);
 
+  // ฟังก์ชันดึงข้อมูลสินค้าในตำแหน่งและแพลนที่เลือก
   const fetchProducts = async () => {
     if (plan && position) {
       try {
@@ -26,6 +27,7 @@ function StockDisplay() {
     }
   };
 
+  // ฟังก์ชันเพิ่มสินค้าเดี่ยว
   const addProduct = async () => {
     try {
       const response = await axios.post('https://stock-api-nontawit-nawattanonapp.vercel.app/api/product', {
@@ -40,6 +42,7 @@ function StockDisplay() {
     }
   };
 
+  // ฟังก์ชันเพิ่มสินค้าหลายรายการ
   const addMultipleProducts = async () => {
     try {
       const response = await axios.post('https://stock-api-nontawit-nawattanonapp.vercel.app/api/products', multiProducts);
@@ -51,6 +54,7 @@ function StockDisplay() {
     }
   };
 
+  // ฟังก์ชันแก้ไขสินค้า
   const editProduct = async () => {
     try {
       const response = await axios.put(`https://stock-api-nontawit-nawattanonapp.vercel.app/api/product/${position}/${editProductID}`, {
@@ -65,6 +69,7 @@ function StockDisplay() {
     }
   };
 
+  // ฟังก์ชันลบสินค้า
   const deleteProduct = async (productID) => {
     try {
       const response = await axios.delete(`https://stock-api-nontawit-nawattanonapp.vercel.app/api/product/${position}/${productID}`);
@@ -75,12 +80,14 @@ function StockDisplay() {
     }
   };
 
+  // ฟังก์ชันจัดการการเปลี่ยนแปลงข้อมูลในฟอร์มเพิ่มหลายรายการ
   const handleMultiProductChange = (index, field, value) => {
     const newMultiProducts = [...multiProducts];
     newMultiProducts[index][field] = value;
     setMultiProducts(newMultiProducts);
   };
 
+  // ฟังก์ชันเพิ่มฟิลด์สำหรับการเพิ่มสินค้าใหม่
   const addNewProductField = () => {
     setMultiProducts([...multiProducts, { productID: '', codeNo: '', productName: '', price: '', quantity: '' }]);
   };
@@ -166,7 +173,7 @@ function StockDisplay() {
         <div className="card p-4 mt-4">
           <h2>Edit Product</h2>
           <form>
-            {/* Add form fields similar to the single product form */}
+            <input type="text" placeholder="Product ID" value={singleProduct.productID} onChange={(e) => setSingleProduct({ ...singleProduct, productID: e.target.value })} />
             <button className="btn btn-primary mt-3" onClick={editProduct}>Save Changes</button>
           </form>
         </div>
@@ -174,7 +181,7 @@ function StockDisplay() {
         <div className="card p-4 mt-4">
           <h2>Add Single Product</h2>
           <form>
-            {/* Add single product form fields */}
+            {/* Single product fields */}
             <button className="btn btn-primary mt-3" onClick={addProduct}>Add Product</button>
           </form>
         </div>
@@ -184,7 +191,7 @@ function StockDisplay() {
         <h2>Add Multiple Products</h2>
         {multiProducts.map((product, index) => (
           <div key={index}>
-            {/* Add multiple products form fields */}
+            <input type="text" placeholder="Product ID" value={product.productID} onChange={(e) => handleMultiProductChange(index, 'productID', e.target.value)} />
             <button className="btn btn-secondary mt-2" onClick={addNewProductField}>Add Another Product</button>
           </div>
         ))}
