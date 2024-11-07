@@ -1,87 +1,120 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Modal, Button, Card, Form, Row, Col } from "react-bootstrap";
-import { FaPlus } from 'react-icons/fa'; // ใช้ไอคอนบวก
+import { Modal, Button, Card, Form } from "react-bootstrap";
 
 const API_BASE_URL = "https://stock-api-nontawit-nawattanonapp.vercel.app/api";
 
 // ฟังก์ชันแปลง timestamp เป็นวันที่แบบไทย
 const formatDateToThai = (seconds, nanoseconds) => {
-  const date = new Date(seconds * 1000 + nanoseconds / 1000000);
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const year = (date.getFullYear() + 543).toString(); // เพิ่ม 543 เพื่อแสดงปี พ.ศ.
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
+    const date = new Date(seconds * 1000 + nanoseconds / 1000000);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = (date.getFullYear() + 543).toString();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
 };
 
 function ProductApp() {
   const [collection, setCollection] = useState("Stock615");
   const [position, setPosition] = useState("01");
   const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [productForms, setProductForms] = useState([{}]); // เก็บข้อมูลฟอร์มสินค้า
-  const [showAddFormModal, setShowAddFormModal] = useState(false); // โมดอลเพิ่มสินค้า
+  const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [newProducts, setNewProducts] = useState([
+    { codeNo: "", productID: "", productName: "", price: "", quantity: "" },
+  ]);
 
   // ฟังก์ชันดึงข้อมูลสินค้า
   const fetchProducts = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/${collection}/${position}`);
       const sortedProducts = response.data.sort((a, b) => a.codeNo.localeCompare(b.codeNo));
-
       const formattedProducts = sortedProducts.map((product) => ({
         ...product,
-        price: parseFloat(product.price).toFixed(2),
+        price: product.price.toFixed(2),
         recorded: product.recorded?._seconds
           ? formatDateToThai(product.recorded._seconds, product.recorded._nanoseconds)
           : "N/A",
       }));
-
       setProducts(formattedProducts);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
   };
 
-  // ฟังก์ชันเพิ่มฟอร์มใหม่
-  const handleAddForm = () => {
-    setProductForms([...productForms, {}]);
+  // เมื่อผู้ใช้กดปุ่มแสดงข้อมูล
+  const handleShowProducts = () => {
+    fetchProducts();
   };
 
-  // ฟังก์ชันจัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
-  const handleFormChange = (index, e) => {
-    const updatedForms = [...productForms];
-    updatedForms[index] = {
-      ...updatedForms[index],
-      [e.target.name]: e.target.value,
-    };
-    setProductForms(updatedForms);
+  // เปิด Modal ของสินค้าเมื่อคลิก Card
+  const handleProductClick = (product) => {
+    setSelectedProduct(product);
+    setShowModal(true);
   };
 
-  // ฟังก์ชันเพิ่มข้อมูลสินค้า
-  const handleAddProducts = async () => {
+  // ฟังก์ชันแก้ไขจำนวนสินค้าและราคา
+  const handleUpdateProduct = async () => {
     try {
-      await Promise.all(productForms.map(async (product) => {
-        if (product.productID && product.productName && product.price && product.quantity) {
-          await axios.post(`${API_BASE_URL}/${collection}/${position}`, {
-            codeNo: product.codeNo,
-            productID: product.productID,
-            productName: product.productName,
-            position: position,
-            price: parseFloat(product.price),
-            quantity: parseInt(product.quantity),
-          });
-        }
-      }));
+      await axios.put(`${API_BASE_URL}/${collection}/${position}/${selectedProduct.id}`, {
+        quantity: selectedProduct.quantity,
+        price: selectedProduct.price,
+      });
+      fetchProducts();
+      setShowModal(false);
+    } catch (error) {
+      console.error("Error updating product:", error);
+    }
+  };
 
-      fetchProducts(); // รีเฟรชข้อมูลหลังการเพิ่มสินค้า
-      setShowAddFormModal(false); // ปิดโมดอล
-      setProductForms([{}]); // รีเซ็ตฟอร์ม
+  // ฟังก์ชันลบสินค้า
+  const handleDeleteProduct = async () => {
+    try {
+      await axios.delete(`${API_BASE_URL}/${collection}/${position}/${selectedProduct.id}`);
+      fetchProducts();
+      setShowModal(false);
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    }
+  };
+
+  // ฟังก์ชันเปิด Modal เพิ่มสินค้า
+  const handleAddProduct = () => {
+    setShowAddProductModal(true);
+  };
+
+  // ฟังก์ชันจัดการการเปลี่ยนแปลงของฟิลด์ในฟอร์มเพิ่มสินค้า
+  const handleAddProductFieldChange = (index, field, value) => {
+    const updatedProducts = [...newProducts];
+    updatedProducts[index][field] = value;
+    setNewProducts(updatedProducts);
+  };
+
+  // ฟังก์ชันเพิ่มสินค้าใหม่
+  const handleSaveNewProducts = async () => {
+    try {
+      await axios.post(`${API_BASE_URL}/products`, newProducts.map(product => ({
+        ...product,
+        collection,
+        position,
+      })));
+      setShowAddProductModal(false);
+      fetchProducts();
+      setNewProducts([{ codeNo: "", productID: "", productName: "", price: "", quantity: "" }]);
     } catch (error) {
       console.error("Error adding products:", error);
     }
+  };
+
+  // ฟังก์ชันเพิ่มฟิลด์สำหรับสินค้าใหม่
+  const handleAddNewProductField = () => {
+    setNewProducts([
+      ...newProducts,
+      { codeNo: "", productID: "", productName: "", price: "", quantity: "" },
+    ]);
   };
 
   return (
@@ -107,22 +140,20 @@ function ProductApp() {
           </Form.Select>
         </div>
         <div className="col-md-4">
-          <Button variant="primary" onClick={fetchProducts}>
+          <Button variant="primary" onClick={handleShowProducts}>
             Show Products
+          </Button>
+          <Button variant="success" onClick={handleAddProduct} className="ms-2">
+            +
           </Button>
         </div>
       </div>
 
-      {/* ปุ่มเพิ่มสินค้า */}
-      <Button variant="success" onClick={() => setShowAddFormModal(true)} style={{ marginBottom: '20px' }}>
-        <FaPlus /> Add Product
-      </Button>
-
-      {/* แสดงข้อมูลสินค้า */}
+      {/* แสดงข้อมูลแบบ Card */}
       <div className="row">
         {products.map((product) => (
           <div key={product.id} className="col-md-4 mb-3">
-            <Card style={{ cursor: "pointer" }}>
+            <Card onClick={() => handleProductClick(product)} style={{ cursor: "pointer" }}>
               <Card.Body>
                 <Card.Title>{product.productName}</Card.Title>
                 <Card.Text>Quantity: {product.quantity}</Card.Text>
@@ -136,74 +167,102 @@ function ProductApp() {
         ))}
       </div>
 
+      {/* Modal แก้ไขจำนวนสินค้าและราคา */}
+      {selectedProduct && (
+        <Modal show={showModal} onHide={() => setShowModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Edit Product Details</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <h5>{selectedProduct.productName}</h5>
+            <Form.Group className="mb-3">
+              <Form.Label>Quantity</Form.Label>
+              <Form.Control
+                type="number"
+                value={selectedProduct.quantity}
+                onChange={(e) => setSelectedProduct({ ...selectedProduct, quantity: parseInt(e.target.value) })}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Price</Form.Label>
+              <Form.Control
+                type="number"
+                step="0.01"
+                value={selectedProduct.price}
+                onChange={(e) => setSelectedProduct({ ...selectedProduct, price: parseFloat(e.target.value) })}
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="danger" onClick={handleDeleteProduct}>
+              Delete Product
+            </Button>
+            <Button variant="primary" onClick={handleUpdateProduct}>
+              Save Changes
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
       {/* Modal เพิ่มสินค้า */}
-      <Modal show={showAddFormModal} onHide={() => setShowAddFormModal(false)}>
+      <Modal show={showAddProductModal} onHide={() => setShowAddProductModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Add New Products</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {productForms.map((form, index) => (
-            <div key={index} className="mb-3">
-              <h5>Product {index + 1}</h5>
-              <Row>
-                <Col>
-                  <Form.Control
-                    type="text"
-                    name="codeNo"
-                    placeholder="Code No"
-                    value={form.codeNo || ''}
-                    onChange={(e) => handleFormChange(index, e)}
-                  />
-                </Col>
-                <Col>
-                  <Form.Control
-                    type="text"
-                    name="productID"
-                    placeholder="Product ID"
-                    value={form.productID || ''}
-                    onChange={(e) => handleFormChange(index, e)}
-                  />
-                </Col>
-              </Row>
-              <Form.Control
-                type="text"
-                name="productName"
-                placeholder="Product Name"
-                value={form.productName || ''}
-                onChange={(e) => handleFormChange(index, e)}
-              />
-              <Row>
-                <Col>
-                  <Form.Control
-                    type="number"
-                    name="price"
-                    placeholder="Price"
-                    value={form.price || ''}
-                    onChange={(e) => handleFormChange(index, e)}
-                  />
-                </Col>
-                <Col>
-                  <Form.Control
-                    type="number"
-                    name="quantity"
-                    placeholder="Quantity"
-                    value={form.quantity || ''}
-                    onChange={(e) => handleFormChange(index, e)}
-                  />
-                </Col>
-              </Row>
+          {newProducts.map((product, index) => (
+            <div key={index} className="mb-4">
+              <Form.Group className="mb-3">
+                <Form.Label>Product Code</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={product.codeNo}
+                  onChange={(e) => handleAddProductFieldChange(index, "codeNo", e.target.value)}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Product ID</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={product.productID}
+                  onChange={(e) => handleAddProductFieldChange(index, "productID", e.target.value)}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Product Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={product.productName}
+                  onChange={(e) => handleAddProductFieldChange(index, "productName", e.target.value)}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Price</Form.Label>
+                <Form.Control
+                  type="number"
+                  value={product.price}
+                  onChange={(e) => handleAddProductFieldChange(index, "price", e.target.value)}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Quantity</Form.Label>
+                <Form.Control
+                  type="number"
+                  value={product.quantity}
+                  onChange={(e) => handleAddProductFieldChange(index, "quantity", e.target.value)}
+                />
+              </Form.Group>
+              {index === newProducts.length - 1 && (
+                <Button variant="link" onClick={handleAddNewProductField}>
+                  + Add another product
+                </Button>
+              )}
             </div>
           ))}
-          <Button variant="link" onClick={handleAddForm}>
-            Add Another Form
-          </Button>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowAddFormModal(false)}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleAddProducts}>
-            Save Products
+          <Button variant="primary" onClick={handleSaveNewProducts}>
+            Save New Products
           </Button>
         </Modal.Footer>
       </Modal>
