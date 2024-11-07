@@ -1,11 +1,11 @@
 import React from 'react';
 import './App.css';
-import StockDisplay from './components/StockDisplay';
+import ProductApp from './ProductApp';
 
 const App = () => {
   return (
     <div className="App">
-      <StockDisplay />
+      <ProductApp />
     </div>
   );
 };
