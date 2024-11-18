@@ -1,13 +1,37 @@
 import React from 'react';
-import './App.css';
-import ProductApp from './ProductApp';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import BarcodeScanner from './components/BarcodeScanner';
 
-const App = () => {
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+  typography: {
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+    ].join(','),
+  },
+});
+
+function App() {
   return (
-    <div className="App">
-      <ProductApp />
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <BarcodeScanner />
+    </ThemeProvider>
   );
-};
+}
 
 export default App;
