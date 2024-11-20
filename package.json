@@ -17,6 +17,7 @@
     "quagga": "^0.12.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-qr-barcode-scanner": "^2.0.0",
     "react-router-dom": "^6.28.0",
     "react-scripts": "5.0.1",
     "react-zxing": "^2.0.2",

@@ -1,45 +1,49 @@
-import React, { useEffect } from "react";
-import Quagga from "quagga";
+import React, { useState } from "react";
+import { Box, Button } from "@mui/material";
+import QrScanner from "react-qr-barcode-scanner";
 
 const BarcodeScanner = ({ onDetected }) => {
-  useEffect(() => {
-    Quagga.init(
-      {
-        inputStream: {
-          type: "LiveStream",
-          constraints: {
-            width: 640,
-            height: 480,
-            facingMode: "environment", // ใช้กล้องหลัง
-          },
-        },
-        decoder: {
-          readers: ["ean_reader"], // สำหรับอ่านบาร์โค้ดแบบ EAN
-        },
-      },
-      (err) => {
-        if (err) {
-          console.error(err);
-          return;
-        }
-        Quagga.start();
-      }
-    );
+  const [scanning, setScanning] = useState(true);
+  const [error, setError] = useState("");
 
-    Quagga.onDetected((data) => {
-      const code = data.codeResult.code;
-      if (code) {
-        onDetected(code); // ส่งค่า productID กลับ
-        Quagga.stop();
-      }
-    });
+  const handleScan = (data) => {
+    if (data) {
+      setScanning(false); // หยุดการสแกน
+      onDetected(data.text); // ส่งข้อมูลบาร์โค้ดกลับไปยังฟอร์ม
+    }
+  };
 
-    return () => {
-      Quagga.stop();
-    };
-  }, [onDetected]);
+  const handleError = (err) => {
+    console.error(err);
+    setError("ไม่สามารถเปิดกล้องได้ โปรดตรวจสอบการอนุญาต.");
+  };
 
-  return <div id="interactive" style={{ width: "100%", height: "100%" }} />;
+  return (
+    <Box sx={{ textAlign: "center" }}>
+      {scanning ? (
+        <>
+          <QrScanner
+            onUpdate={(err, result) => {
+              if (result) handleScan(result);
+              if (err) handleError(err);
+            }}
+            style={{ width: "100%", maxWidth: 400, margin: "auto" }}
+          />
+          {error && <p style={{ color: "red" }}>{error}</p>}
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => setScanning(false)}
+            sx={{ marginTop: 2 }}
+          >
+            ยกเลิก
+          </Button>
+        </>
+      ) : (
+        <p>กำลังโหลด...</p>
+      )}
+    </Box>
+  );
 };
 
 export default BarcodeScanner;
