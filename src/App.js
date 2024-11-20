@@ -1,90 +1,60 @@
-import React, { useState } from 'react';
-import {
-  Container,
-  Box,
-  Button,
-  Typography,
-  Paper,
-  Grid
-} from '@mui/material';
-import { Add, Update } from '@mui/icons-material';
-import { AddProductForm } from './components/forms/AddProductForm';
-import { UpdateStockForm } from './components/forms/UpdateStockForm';
-import { ScannerDialog } from './components/scanner/ScannerDialog';
+import React, { useState } from "react";
+import { Button, Box, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
+import AddProductForm from "./components/AddProductForm";
+import UpdateProductForm from "./components/UpdateProductForm";
 
-const App = () => {
-  const [addProductOpen, setAddProductOpen] = useState(false);
-  const [updateStockOpen, setUpdateStockOpen] = useState(false);
-  const [scannerOpen, setScannerOpen] = useState(false);
-  const [scannerMode, setScannerMode] = useState(null);
-  const [scannedData, setScannedData] = useState(null);
+function App() {
+  const [open, setOpen] = useState(false); // สถานะเปิด-ปิดของป็อปอัพ
+  const [currentForm, setCurrentForm] = useState(null); // ฟอร์มที่ต้องการแสดง (add หรือ update)
 
-  const handleScanComplete = (result) => {
-    setScannedData(result);
-    setScannerOpen(false);
-    if (scannerMode === 'add') {
-      setAddProductOpen(true);
-    } else {
-      setUpdateStockOpen(true);
-    }
+  // ฟังก์ชันเปิดป็อปอัพ
+  const handleOpen = (formType) => {
+    setCurrentForm(formType);
+    setOpen(true);
   };
 
-  const handleScanStart = (mode) => {
-    setScannerMode(mode);
-    setScannerOpen(true);
+  // ฟังก์ชันปิดป็อปอัพ
+  const handleClose = () => {
+    setOpen(false);
+    setCurrentForm(null);
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h4" gutterBottom textAlign="center">
-          ระบบจัดการสต๊อกสินค้า
-        </Typography>
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Grid item xs={12}>
-            <Paper sx={{ p: 2 }}>
-              <Button
-                fullWidth
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => handleScanStart('add')}
-                sx={{ mb: 2 }}
-              >
-                เพิ่มสินค้า
-              </Button>
-              <Button
-                fullWidth
-                variant="contained"
-                color="secondary"
-                startIcon={<Update />}
-                onClick={() => handleScanStart('update')}
-              >
-                อัพเดทสต๊อกสินค้า
-              </Button>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Box>
+    <Box sx={{ textAlign: "center", marginTop: 4 }}>
+      <h1>ระบบจัดการข้อมูลสินค้า</h1>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => handleOpen("add")}
+        sx={{ marginRight: 2 }}
+      >
+        เพิ่มสินค้า
+      </Button>
+      <Button
+        variant="contained"
+        color="secondary"
+        onClick={() => handleOpen("update")}
+      >
+        อัปเดตสินค้า
+      </Button>
 
-      <ScannerDialog 
-        open={scannerOpen}
-        onClose={() => setScannerOpen(false)}
-        onResult={handleScanComplete}
-      />
-
-      <AddProductForm
-        open={addProductOpen}
-        onClose={() => setAddProductOpen(false)}
-        scannedData={scannedData}
-      />
-      
-      <UpdateStockForm
-        open={updateStockOpen}
-        onClose={() => setUpdateStockOpen(false)}
-        scannedData={scannedData}
-      />
-    </Container>
+      {/* Dialog สำหรับแสดงฟอร์ม */}
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {currentForm === "add" ? "เพิ่มสินค้า" : "อัปเดตสินค้า"}
+        </DialogTitle>
+        <DialogContent>
+          {currentForm === "add" && <AddProductForm />}
+          {currentForm === "update" && <UpdateProductForm />}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="error">
+            ปิด
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
-};
+}
 
 export default App;
