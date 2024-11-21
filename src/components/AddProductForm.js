@@ -1,119 +1,101 @@
-import React, { useState } from "react";
-import { TextField, Button, Grid } from "@mui/material";
-import BarcodeScanner from "./BarcodeScanner";
-import dayjs from "dayjs";
+import React, { useState, useEffect } from "react";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 
 const AddProductForm = () => {
-  const [scanning, setScanning] = useState(false);
-  const [formData, setFormData] = useState({
-    productID: "",
-    stock: "",
-    shelf: "",
-    productName: "",
-    price: "",
-    quantity: "",
-    timestamp: dayjs().format("DD/MM/YYYY HH:mm"),
-  });
+  const [barcode, setBarcode] = useState(""); // เก็บผลลัพธ์บาร์โค้ด
+  const [error, setError] = useState(""); // เก็บข้อผิดพลาด
+  const [isScanning, setIsScanning] = useState(false); // สถานะการสแกน
+  const [cameraError, setCameraError] = useState(""); // เก็บสถานะกล้อง
+  
+  useEffect(() => {
+    let codeReader;
+    if (isScanning) {
+      codeReader = new BrowserMultiFormatReader();
+      codeReader
+        .decodeFromVideoDevice(null, "video", (result, error) => {
+          if (result) {
+            setBarcode(result.text); // เก็บค่าบาร์โค้ด
+            setError(""); // ล้างข้อผิดพลาด
+            stopScan(codeReader); // หยุดการสแกน
+          }
+          if (error) {
+            console.error(error);
+            setError("ไม่สามารถสแกนบาร์โค้ดได้");
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          setCameraError("ไม่สามารถเปิดกล้องได้ โปรดตรวจสอบการอนุญาต");
+        });
+    }
 
-  const handleBarcodeDetected = (code) => {
-    setFormData((prev) => ({ ...prev, productID: code }));
-    setScanning(false);
+    return () => {
+      if (codeReader) {
+        stopScan(codeReader);
+      }
+    };
+  }, [isScanning]);
+
+  const startScan = () => {
+    setIsScanning(true);
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = () => {
-    console.log("Submitted Data:", formData);
+  const stopScan = (codeReader) => {
+    setIsScanning(false);
+    if (codeReader) {
+      codeReader.reset();
+    }
   };
 
   return (
-    <Grid container spacing={2}>
-      {scanning ? (
-        <Grid item xs={12}>
-          <BarcodeScanner onDetected={handleBarcodeDetected} />
-        </Grid>
-      ) : (
-        <Grid item xs={12}>
-          <Button
-            variant="contained"
-            onClick={() => setScanning(true)}
-            fullWidth
-            color="primary"
-          >
-            สแกนบาร์โค้ด
-          </Button>
-        </Grid>
+    <div style={{ padding: "20px" }}>
+      <h2>เพิ่มสินค้า</h2>
+
+      {/* ปุ่มเริ่มการสแกน */}
+      <button
+        onClick={startScan}
+        style={{ margin: "10px 0", padding: "10px 20px", cursor: "pointer" }}
+      >
+        สแกนบาร์โค้ด
+      </button>
+
+      {/* กล้องแสดงผล */}
+      {isScanning && (
+        <div style={{ margin: "20px 0" }}>
+          <video id="video" width="100%" style={{ border: "1px solid #ddd" }} />
+        </div>
       )}
-      <Grid item xs={12}>
-        <TextField
-          label="Product ID"
-          value={formData.productID}
-          InputProps={{ readOnly: true }}
-          fullWidth
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          label="Stock"
-          name="stock"
-          value={formData.stock}
-          onChange={handleChange}
-          fullWidth
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          label="Shelf"
-          name="shelf"
-          value={formData.shelf}
-          onChange={handleChange}
-          fullWidth
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          label="Product Name"
-          name="productName"
-          value={formData.productName}
-          onChange={handleChange}
-          fullWidth
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          label="Price"
-          name="price"
-          value={formData.price}
-          onChange={handleChange}
-          fullWidth
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          label="Quantity"
-          name="quantity"
-          value={formData.quantity}
-          onChange={handleChange}
-          fullWidth
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          label="Timestamp"
-          value={formData.timestamp}
-          InputProps={{ readOnly: true }}
-          fullWidth
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Button variant="contained" onClick={handleSubmit} fullWidth>
-          บันทึกสินค้า
-        </Button>
-      </Grid>
-    </Grid>
+
+      {/* ข้อมูลผลลัพธ์ */}
+      {barcode && (
+        <p style={{ color: "green", fontWeight: "bold" }}>
+          บาร์โค้ดที่สแกนได้: {barcode}
+        </p>
+      )}
+
+      {/* แสดงข้อผิดพลาด */}
+      {(error || cameraError) && (
+        <p style={{ color: "red", fontWeight: "bold" }}>
+          {cameraError || error}
+        </p>
+      )}
+
+      {/* ปุ่มหยุดการสแกน */}
+      {isScanning && (
+        <button
+          onClick={() => setIsScanning(false)}
+          style={{
+            margin: "10px 0",
+            padding: "10px 20px",
+            cursor: "pointer",
+            backgroundColor: "red",
+            color: "white",
+          }}
+        >
+          หยุดสแกน
+        </button>
+      )}
+    </div>
   );
 };
 
