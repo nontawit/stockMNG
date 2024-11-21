@@ -1,48 +1,43 @@
-import React, { useState } from "react";
-import { Box, Button } from "@mui/material";
-import QrScanner from "react-qr-barcode-scanner";
+import React, { useRef, useState } from "react";
+import Webcam from "react-webcam";
+import jsQR from "jsqr";
 
-const BarcodeScanner = ({ onDetected }) => {
-  const [scanning, setScanning] = useState(true);
-  const [error, setError] = useState("");
+const BarcodeScanner = () => {
+  const webcamRef = useRef(null);
+  const [productID, setProductID] = useState(null);
+  const [error, setError] = useState(null);
 
-  const handleScan = (data) => {
-    if (data) {
-      setScanning(false); // หยุดการสแกน
-      onDetected(data.text); // ส่งข้อมูลบาร์โค้ดกลับไปยังฟอร์ม
+  const scanBarcode = () => {
+    const canvas = document.createElement("canvas");
+    const video = webcamRef.current.video;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
+
+    if (qrCode) {
+      setProductID(qrCode.data); // ได้ผลลัพธ์จากบาร์โค้ด
+    } else {
+      setError("ไม่สามารถสแกนบาร์โค้ดได้");
     }
   };
 
-  const handleError = (err) => {
-    console.error(err);
-    setError("ไม่สามารถเปิดกล้องได้ โปรดตรวจสอบการอนุญาต.");
-  };
-
   return (
-    <Box sx={{ textAlign: "center" }}>
-      {scanning ? (
-        <>
-          <QrScanner
-            onUpdate={(err, result) => {
-              if (result) handleScan(result);
-              if (err) handleError(err);
-            }}
-            style={{ width: "100%", maxWidth: 400, margin: "auto" }}
-          />
-          {error && <p style={{ color: "red" }}>{error}</p>}
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => setScanning(false)}
-            sx={{ marginTop: 2 }}
-          >
-            ยกเลิก
-          </Button>
-        </>
-      ) : (
-        <p>กำลังโหลด...</p>
-      )}
-    </Box>
+    <div>
+      <h3>สแกนบาร์โค้ด</h3>
+      <Webcam
+        ref={webcamRef}
+        screenshotFormat="image/jpeg"
+        style={{ width: "100%", height: "auto" }}
+      />
+      <button onClick={scanBarcode}>สแกน</button>
+      {productID && <p>Product ID: {productID}</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+    </div>
   );
 };
 
